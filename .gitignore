@@ -1,0 +1,14 @@
+# Ambiente virtual
+venv/
+env/
+__pycache__/
+*.pyc
+
+# Dataset (muito grande pro GitHub, ~98MB — cada um baixa separadamente)
+creditcard.csv
+
+# VS Code
+.vscode/
+
+# Sistema
+.DS_Store
