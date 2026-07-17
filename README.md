@@ -1,6 +1,6 @@
 #  Detecção de Fraude em Cartão de Crédito
 
-Projeto de classificação em Machine Learning para identificar transações fraudulentas em um dataset real e **extremamente desbalanceado** (só 0,17% das transações são fraude). O foco não é só treinar modelos, mas mostrar por que **acurácia é uma métrica enganosa** nesse tipo de problema — e o trade-off entre Precision e Recall que qualquer projeto de fraude precisa enfrentar.
+Projeto de classificação em Machine Learning para identificar transações fraudulentas em um dataset real e **extremamente desbalanceado** (só 0,17% das transações são fraude). O foco não é só treinar modelos, mas mostrar por que **acurácia é uma métrica enganosa** nesse tipo de problema, e o trade-off entre Precision e Recall que qualquer projeto de fraude precisa enfrentar.
 
 ##  Sobre o dataset
 
@@ -21,14 +21,14 @@ Depois de baixar, coloque o arquivo `creditcard.csv` na raiz do projeto.
 
 ##  Metodologia
 
-1. **EDA** — análise da distribuição das classes e do valor das transações
-2. **Pré-processamento** — escalonamento de `Amount` e `Time` (as colunas `V1`-`V28` já vêm normalizadas via PCA)
-3. **Modelagem** — 4 algoritmos clássicos de classificação, todos com `class_weight='balanced'` (exceto KNN, que não suporta esse parâmetro):
+1. **EDA**: análise da distribuição das classes e do valor das transações
+2. **Pré-processamento**: escalonamento de `Amount` e `Time` (as colunas `V1`-`V28` já vêm normalizadas via PCA)
+3. **Modelagem**: 4 algoritmos clássicos de classificação, todos com `class_weight='balanced'` (exceto KNN, que não suporta esse parâmetro):
    - Regressão Logística
    - Árvore de Decisão
    - K-Nearest Neighbors (KNN)
    - SVM Linear
-4. **Avaliação** — Precision, Recall, F1-Score e ROC-AUC (nunca acurácia sozinha)
+4. **Avaliação**: Precision, Recall, F1-Score e ROC-AUC (nunca acurácia sozinha)
 
 ##  Resultados
 
@@ -44,9 +44,9 @@ Depois de baixar, coloque o arquivo `creditcard.csv` na raiz do projeto.
 
 ##  Principais insights
 
-- Com 99,8% das transações sendo normais, um modelo que nunca prevê fraude já "acerta" quase tudo — por isso acurácia não serve como métrica aqui.
-- **Regressão Logística e SVM** com `class_weight='balanced'` pegam ~92% das fraudes (recall alto), mas geram muitíssimos falsos positivos (precision de só ~6-7%) — na prática, isso significa bloquear um monte de compra legítima.
-- **KNN**, mesmo sem nenhum ajuste de balanceamento, equilibra melhor Precision e Recall neste dataset — só que é o modelo mais lento e menos escalável dos quatro.
+- Com 99,8% das transações sendo normais, um modelo que nunca prevê fraude já "acerta" quase tudo, por isso acurácia não serve como métrica aqui.
+- **Regressão Logística e SVM** com `class_weight='balanced'` pegam ~92% das fraudes (recall alto), mas geram muitíssimos falsos positivos (precision de só ~6-7%), na prática, isso significa bloquear um monte de compra legítima.
+- **KNN**, mesmo sem nenhum ajuste de balanceamento, equilibra melhor Precision e Recall neste dataset, mas é o modelo mais lento e menos escalável dos quatro.
 - A escolha do "melhor" modelo depende do que custa mais caro pro negócio: deixar passar uma fraude ou incomodar um cliente legítimo.
 
 ##  Como rodar
