@@ -232,13 +232,3 @@ plt.show()
 #   mais lento e o menos escalável dos quatro.
 # - Qual modelo "vence" depende do que custa mais caro para o negócio:
 #   deixar uma fraude passar, ou incomodar um cliente legítimo.
-#
-# ## 6. Próximos passos (se quiser ir além)
-#
-# - Testar **SMOTE** (biblioteca `imbalanced-learn`) para gerar exemplos
-#   sintéticos da classe minoritária em vez de só usar `class_weight`.
-# - Testar **Random Forest** ou **XGBoost**, que costumam superar os
-#   modelos do curso em problemas assim.
-# - Fazer **GridSearchCV** para ajustar hiperparâmetros de cada modelo.
-# - Ajustar o **threshold de decisão** (em vez do padrão de 0.5) para
-#   otimizar diretamente para o custo de negócio que importa mais pra você.
