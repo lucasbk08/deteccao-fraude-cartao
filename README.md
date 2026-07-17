@@ -74,13 +74,6 @@ O script também tem marcadores `# %%`, então pode ser rodado célula por célu
 - scikit-learn
 - matplotlib / seaborn
 
-##  Próximos passos
-
-- [ ] Testar SMOTE (`imbalanced-learn`) em vez de `class_weight`
-- [ ] Testar Random Forest / XGBoost
-- [ ] Ajustar hiperparâmetros com `GridSearchCV`
-- [ ] Ajustar o threshold de decisão para otimizar o custo de negócio
-
 ##  Licença
 
 Este projeto é de uso livre para fins de estudo. O dataset original pertence à [ULB Machine Learning Group](https://www.kaggle.com/mlg-ulb/creditcardfraud).
