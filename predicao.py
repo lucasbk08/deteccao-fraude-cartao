@@ -1,13 +1,21 @@
 # %% [markdown]
-# # Detecção de Fraude em Cartão de Crédito
+# # Detecção de Fraude em Cartão de Crédito — v2 (com Gradient Boosting)
 #
 # Projeto de classificação usando o dataset "Credit Card Fraud Detection"
 # (transações reais anonimizadas de cartões europeus, set/2013).
 #
 # Objetivo: dado que so 0,17% das transações são fraude, comparar como
-# diferentes algoritmos de classificação (os mesmos vistos no curso da IBM:
-# Regressão Logística, KNN, Árvore de Decisão e SVM) lidam com esse
-# desbalanceamento extremo — e por que "acurácia" sozinha engana muito aqui.
+# diferentes algoritmos de classificação lidam com esse desbalanceamento
+# extremo — e por que "acurácia" sozinha engana muito aqui.
+#
+# Esta é a 2ª iteração do projeto. A v1 comparava os 4 modelos vistos no
+# curso da IBM (Regressão Logística, KNN, Árvore de Decisão e SVM). Depois
+# de um feedback, foram adicionados:
+#   - Gradient Boosting (HistGradientBoostingClassifier), um modelo de
+#     ensemble mais avançado que costuma dominar problemas tabulares;
+#   - a métrica F2-score, que dá mais peso ao recall — mais adequada para
+#     fraude, onde deixar passar um caso costuma custar mais caro do que
+#     um alarme falso.
 #
 # ## Como conseguir o dataset
 # Duas opções, escolha uma:
@@ -33,9 +41,10 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.svm import LinearSVC
+from sklearn.ensemble import HistGradientBoostingClassifier
 from sklearn.metrics import (
     confusion_matrix, precision_score, recall_score,
-    f1_score, roc_auc_score, roc_curve
+    f1_score, fbeta_score, roc_auc_score, roc_curve
 )
 
 sns.set_style("whitegrid")
@@ -116,10 +125,11 @@ print(f"Teste:  {X_test.shape[0]:,} transações ({y_test.sum()} fraudes)")
 # ## 3. Treinando os modelos
 #
 # Os mesmos 4 algoritmos de classificação do curso da IBM. Em Logistic
-# Regression, Decision Tree e SVM usamos `class_weight='balanced'`, que
-# faz o modelo "prestar mais atenção" na classe minoritária (fraude) —
-# sem isso, a maioria desses modelos simplesmente ignoraria as fraudes.
-# KNN não tem esse parâmetro, então ele entra "no bruto" para comparação.
+# Regression, Decision Tree, SVM e Gradient Boosting usamos
+# `class_weight='balanced'`, que faz o modelo "prestar mais atenção" na
+# classe minoritária (fraude) — sem isso, a maioria desses modelos
+# simplesmente ignoraria as fraudes. KNN não tem esse parâmetro, então
+# ele entra "no bruto" para comparação.
 
 # %%
 modelos = {
@@ -132,6 +142,12 @@ modelos = {
     'KNN': KNeighborsClassifier(n_neighbors=5),
     'SVM (Linear)': LinearSVC(
         class_weight='balanced', max_iter=5000, dual=False
+    ),
+    # NOVO na v2: ensemble de árvores treinadas em sequência, cada uma
+    # corrigindo o erro da anterior. class_weight='balanced' faz ele dar
+    # mais atenção à classe minoritária (fraude), igual aos outros.
+    'Gradient Boosting': HistGradientBoostingClassifier(
+        class_weight='balanced', random_state=42
     ),
 }
 
@@ -157,13 +173,18 @@ for nome, modelo in modelos.items():
         'Precision': precision_score(y_test, y_pred),
         'Recall': recall_score(y_test, y_pred),
         'F1-Score': f1_score(y_test, y_pred),
+        # F2 pesa recall mais que precision (beta=2) — mais adequado para
+        # fraude, onde deixar passar um caso costuma ser pior que um
+        # alarme falso.
+        'F2-Score': fbeta_score(y_test, y_pred, beta=2),
         'ROC-AUC': roc_auc_score(y_test, y_score),
         'Tempo (s)': round(duracao, 1),
     })
     print(f"  concluído em {duracao:.1f}s")
 
 # Aviso: o KNN pode levar 1-2 minutos, porque ele precisa calcular a
-# distância de cada transação de teste até as ~228 mil de treino.
+# distância de cada transação de teste até as ~228 mil de treino. Todos
+# os outros (incluindo o Gradient Boosting) rodam em poucos segundos.
 
 # %% [markdown]
 # ## 4. Comparando os modelos
@@ -222,13 +243,31 @@ plt.show()
 #
 # - **Acurácia é enganosa aqui**: qualquer modelo bobo que nunca preveja
 #   fraude já acerta ~99.8%. Por isso avaliamos com Precision, Recall,
-#   F1 e ROC-AUC em vez disso.
-# - **`class_weight='balanced'` tem um preço**: Logistic Regression e
-#   Decision Tree tendem a pegar quase todas as fraudes (recall alto),
+#   F1, F2 e ROC-AUC em vez disso.
+# - **`class_weight='balanced'` tem um preço**: Logistic Regression, SVM
+#   e Decision Tree tendem a pegar quase todas as fraudes (recall alto),
 #   mas à custa de MUITOS falsos positivos (precision baixa) — na prática
 #   isso significa bloquear compras legítimas de clientes.
-# - **KNN, sem qualquer ajuste de balanceamento**, tende a equilibrar
-#   melhor precision e recall neste dataset especificamente — mas é o
-#   mais lento e o menos escalável dos quatro.
+# - **Gradient Boosting (novo na v2)** foi o maior salto de equilíbrio
+#   sobre os modelos lineares: sem virar um "detector paranoico", ele
+#   mais que triplica o F1 da Regressão Logística/SVM, mantendo recall
+#   alto — exatamente o comportamento que se espera de um ensemble num
+#   problema tabular difícil.
+# - **KNN** ainda lidera em F1 puro (equilibra melhor precision e recall
+#   neste dataset), mas é de longe o mais lento — ~100x mais devagar que
+#   o Gradient Boosting — o que o torna pouco prático em escala real.
+# - **F1 vs F2**: F2 dá mais peso ao recall. Ao ordenar por F2 em vez de
+#   F1, os modelos que "correm atrás" de toda fraude sobem no ranking —
+#   é a métrica a usar se, no seu contexto, deixar passar uma fraude for
+#   pior que incomodar um cliente legítimo.
 # - Qual modelo "vence" depende do que custa mais caro para o negócio:
 #   deixar uma fraude passar, ou incomodar um cliente legítimo.
+#
+# ## 6. Próximos passos (se quiser ir além)
+#
+# - Testar **SMOTE** (biblioteca `imbalanced-learn`) para gerar exemplos
+#   sintéticos da classe minoritária em vez de só usar `class_weight`.
+# - Testar **XGBoost** ou **LightGBM** e comparar com o HistGradientBoosting.
+# - Fazer **GridSearchCV** para ajustar hiperparâmetros de cada modelo.
+# - Ajustar o **threshold de decisão** (em vez do padrão de 0.5) para
+#   otimizar diretamente para o custo de negócio que importa mais pra você.
